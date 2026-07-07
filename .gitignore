@@ -1,0 +1,53 @@
+# Terraform
+**/.terraform/*
+*.tfstate
+*.tfstate.*
+crash.log
+crash.*.log
+
+# Terraform Plans
+*.tfplan
+*.plan
+
+# Variable Files
+*.auto.tfvars
+*.auto.tfvars.json
+
+# Sensitive Files
+secrets.tfvars
+*.secret
+
+# Local Overrides
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# Terraform Lock File
+# Keep if team shares provider versions
+# Remove this line if you want to commit it
+# .terraform.lock.hcl
+
+# VS Code
+.vscode/
+
+# JetBrains
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Python
+__pycache__/
+*.pyc
+
+# Logs
+*.log
+
+# Packer
+packer_cache/
+.packer.d/
+
+# Ansible
+*.retry
