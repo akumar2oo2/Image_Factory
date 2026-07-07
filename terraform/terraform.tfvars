@@ -36,7 +36,7 @@ compute_galleries = {
 
   primary = {
 
-    name               = "AK-ACG-Images"
+    name               = "AKACGImages"
     resource_group_key = "images"
     image_definitions = {
 
