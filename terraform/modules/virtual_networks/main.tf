@@ -16,13 +16,13 @@ locals {
     in var.virtual_networks : {
 
       for subnet_key, subnet in network.subnets : "${network_key}-${subnet_key}" => {
-        
-        subnet_name = subnet.name
-        subnet_cidr = subnet.cidr
+
+        subnet_name         = subnet.name
+        subnet_cidr         = subnet.cidr
         virtual_network_key = network_key
         resource_group_name = var.resource_groups[network.resource_group_key]
-        }
       }
+    }
   ]...)
 }
 
