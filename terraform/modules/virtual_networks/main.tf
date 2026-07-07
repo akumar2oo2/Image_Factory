@@ -34,6 +34,6 @@ resource "azurerm_subnet" "subnet" {
 
   name                 = each.value.subnet_name
   resource_group_name  = each.value.resource_group_name
-  virtual_network_name = each.value.virtual_network_name
+  virtual_network_name = azurerm_virtual_network.virtual_network[each.value.virtual_network_key].name
   address_prefixes     = [each.value.subnet_cidr]
 }
