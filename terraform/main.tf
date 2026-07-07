@@ -2,7 +2,7 @@ module "resource_groups" {
 
   source = "./modules/resource_groups"
 
-  location        = var.location
+  location = var.location
 
   resource_groups = var.resource_groups
 }

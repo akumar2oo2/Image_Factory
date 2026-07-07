@@ -16,7 +16,7 @@ virtual_networks = {
     name               = "AK-VNET"
     resource_group_key = "network"
     address_space      = ["10.0.0.0/16"]
-    
+
     subnets = {
 
       runner = {
@@ -38,7 +38,7 @@ compute_galleries = {
 
     name               = "AK-ACG-Images"
     resource_group_key = "images"
-    image_definitions  = {
+    image_definitions = {
 
       win2022 = {
 
