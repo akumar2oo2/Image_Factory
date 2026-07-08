@@ -21,7 +21,11 @@ jobs:
 
     name: Terraform Plan
 
-    runs-on: ubuntu-latest
+    runs-on:
+      - self-hosted
+      - Linux
+      - X64
+      - terraform
 
     defaults:
       run:
@@ -74,7 +78,11 @@ jobs:
     environment:
       name: production
 
-    runs-on: ubuntu-latest
+    runs-on:
+      - self-hosted
+      - Linux
+      - X64
+      - terraform
 
     defaults:
       run:
