@@ -1,0 +1,63 @@
+---
+# FSLogix installation
+
+- name: Create FSLogix working directory
+  ansible.windows.win_file:
+    path: C:\Temp\Packer
+    state: directory
+
+- name: Download FSLogix installer
+  ansible.windows.win_get_url:
+    url: "{{ fslogix_url }}"
+    dest: C:\Temp\Packer\FSLogixAppsSetup.exe
+    force: true
+  no_log: true
+
+- name: Verify FSLogix installer exists
+  ansible.windows.win_stat:
+    path: C:\Temp\Packer\FSLogixAppsSetup.exe
+  register: fslogix_installer
+
+- name: Fail if FSLogix installer was not downloaded
+  ansible.builtin.fail:
+    msg: "FSLogix installer download failed."
+  when: not fslogix_installer.stat.exists
+
+- name: Install FSLogix
+  ansible.windows.win_package:
+    path: C:\Temp\Packer\FSLogixAppsSetup.exe
+    arguments: /install /quiet /norestart
+    state: present
+    expected_return_code:
+      - 0
+      - 3010
+  register: fslogix_install_result
+
+- name: Reboot after FSLogix installation if required
+  ansible.windows.win_reboot:
+    reboot_timeout: 1800
+    post_reboot_delay: 60
+  when: fslogix_install_result.rc is defined and fslogix_install_result.rc == 3010
+
+- name: Validate FSLogix installation
+  ansible.windows.win_shell: |
+    $Installed = Get-ItemProperty `
+      HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\* , `
+      HKLM:\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\* `
+      -ErrorAction SilentlyContinue |
+      Where-Object { $_.DisplayName -like "*FSLogix*" }
+
+    if ($Installed) {
+      Write-Host "FSLogix detected"
+      exit 0
+    }
+    else {
+      Write-Host "FSLogix not detected"
+      exit 1
+    }
+  register: fslogix_validation
+  changed_when: false
+
+- name: Show FSLogix validation output
+  ansible.builtin.debug:
+    var: fslogix_validation.stdout_lines

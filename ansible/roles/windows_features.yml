@@ -1,0 +1,21 @@
+---
+# Install required Windows features for AVD / Citrix image
+
+- name: Install Remote Desktop Session Host role
+  ansible.windows.win_feature:
+    name: RDS-RD-Server
+    state: present
+    include_management_tools: true
+  register: rds_feature_result
+
+- name: Install Server Media Foundation
+  ansible.windows.win_feature:
+    name: Server-Media-Foundation
+    state: present
+  register: media_foundation_result
+
+- name: Reboot after Windows feature installation if required
+  ansible.windows.win_reboot:
+    reboot_timeout: 1800
+    post_reboot_delay: 60
+  when: rds_feature_result.reboot_required or media_foundation_result.reboot_required

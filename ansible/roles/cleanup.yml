@@ -1,0 +1,27 @@
+---
+# Optional validation pause
+
+- name: Pause after installation for manual validation
+  ansible.windows.win_shell: |
+    Write-Host "========================================"
+    Write-Host "POST INSTALLATION PAUSE"
+    Write-Host "Waiting {{ pause_seconds }} seconds"
+    Write-Host "========================================"
+
+    Start-Sleep -Seconds {{ pause_seconds }}
+
+    Write-Host "Pause completed"
+  changed_when: false
+  when: pause_seconds | int > 0
+
+# Cleanup temporary directories
+
+- name: Remove FSLogix temporary directory
+  ansible.windows.win_file:
+    path: C:\Temp\Packer
+    state: absent
+
+- name: Remove Citrix temporary directory
+  ansible.windows.win_file:
+    path: C:\Temp\Citrix
+    state: absent

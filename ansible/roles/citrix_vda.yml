@@ -1,0 +1,118 @@
+---
+# Citrix VDA installation
+
+- name: Create Citrix working directory
+  ansible.windows.win_file:
+    path: C:\Temp\Citrix
+    state: directory
+
+- name: Create Citrix log directory
+  ansible.windows.win_file:
+    path: C:\Temp\Citrix\Logs
+    state: directory
+
+- name: Download Citrix VDA installer
+  ansible.windows.win_get_url:
+    url: "{{ citrix_url }}"
+    dest: C:\Temp\Citrix\CitrixVDA.exe
+    force: true
+  no_log: true
+
+- name: Verify Citrix VDA installer exists
+  ansible.windows.win_stat:
+    path: C:\Temp\Citrix\CitrixVDA.exe
+  register: citrix_installer
+
+- name: Fail if Citrix installer was not downloaded
+  ansible.builtin.fail:
+    msg: "Citrix VDA installer download failed."
+  when: not citrix_installer.stat.exists
+
+- name: Install Citrix VDA
+  ansible.windows.win_package:
+    path: C:\Temp\Citrix\CitrixVDA.exe
+    arguments: >-
+      /quiet
+      /noreboot
+      /components vda,plugins
+      /includeadditional "Citrix MCS IODriver","Citrix Profile Management","Citrix Profile Management WMI Plug-in"
+      /enable_hdx_ports
+      /mastermcsimage
+      /enable_remote_assistance
+      /logpath "C:\Temp\Citrix\Logs"
+    state: present
+    expected_return_code:
+      - 0
+      - 3
+      - 3010
+  register: citrix_install_result
+
+- name: Reboot after Citrix VDA installation if required
+  ansible.windows.win_reboot:
+    reboot_timeout: 1800
+    post_reboot_delay: 120
+  when: citrix_install_result.rc is defined and citrix_install_result.rc in [3, 3010]
+
+- name: Collect Citrix VDA precheck details if available
+  ansible.windows.win_shell: |
+    $PrecheckFile = "C:\ProgramData\Citrix\XenDesktopSetup\VdaPrecheckDetails.json"
+
+    if (Test-Path $PrecheckFile) {
+      Write-Host "----- VdaPrecheckDetails.json START -----"
+      Get-Content $PrecheckFile -Raw
+      Write-Host "----- VdaPrecheckDetails.json END -----"
+    }
+    else {
+      Write-Host "VdaPrecheckDetails.json not found"
+    }
+  register: citrix_precheck_output
+  changed_when: false
+  failed_when: false
+
+- name: Show Citrix VDA precheck details
+  ansible.builtin.debug:
+    var: citrix_precheck_output.stdout_lines
+
+- name: Validate required Citrix components
+  ansible.windows.win_shell: |
+    $InstalledApps = @(
+      Get-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\*" -ErrorAction SilentlyContinue
+      Get-ItemProperty "HKLM:\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\*" -ErrorAction SilentlyContinue
+    )
+
+    $RequiredApps = @(
+      "Citrix Browser Content Redirection Plug-in",
+      "Citrix Secure Access Endpoint Analysis",
+      "Citrix Virtual Apps and Desktops",
+      "Citrix Workspace",
+      "Citrix Workspace Environment Management Agent",
+      "deviceTRUST Agent"
+    )
+
+    $MissingApps = @()
+
+    foreach ($App in $RequiredApps) {
+
+      $Found = $InstalledApps | Where-Object {
+        $_.DisplayName -like "*$App*"
+      }
+
+      if (-not $Found) {
+        $MissingApps += $App
+      }
+    }
+
+    if ($MissingApps.Count -gt 0) {
+      Write-Host "Missing applications:"
+      $MissingApps
+      exit 1
+    }
+
+    Write-Host "All required Citrix components detected"
+    exit 0
+  register: citrix_validation
+  changed_when: false
+
+- name: Show Citrix validation output
+  ansible.builtin.debug:
+    var: citrix_validation.stdout_lines

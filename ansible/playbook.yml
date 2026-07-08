@@ -1,0 +1,26 @@
+---
+- name: Configure Windows golden image
+  hosts: all
+  gather_facts: false
+
+  tasks:
+
+    - name: Install Windows features required for AVD and Citrix
+      ansible.builtin.include_tasks: roles/windows_features.yml
+      tags:
+        - windows_features
+
+    - name: Install and validate FSLogix
+      ansible.builtin.include_tasks: roles/fslogix.yml
+      tags:
+        - fslogix
+
+    - name: Install and validate Citrix VDA
+      ansible.builtin.include_tasks: roles/citrix_vda.yml
+      tags:
+        - citrix
+
+    - name: Run final cleanup and validation
+      ansible.builtin.include_tasks: roles/cleanup.yml
+      tags:
+        - cleanup
