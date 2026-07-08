@@ -6,15 +6,6 @@
     path: C:\Temp\Packer
     state: directory
 
-- name: Show FSLogix URL length
-  ansible.builtin.debug:
-    msg: "FSLogix URL length={{ fslogix_url | length }}"
-
-- name: Validate FSLogix URL
-  ansible.builtin.fail:
-    msg: "FSLogix URL is invalid: {{ fslogix_url }}"
-  when: not (fslogix_url is match('^https://'))
-
 - name: Download FSLogix installer
   ansible.windows.win_get_url:
     url: "{{ fslogix_url }}"

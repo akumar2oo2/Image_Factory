@@ -25,10 +25,6 @@ jobs:
       - packer
       - ansible
 
-    outputs:
-      fslogix_url: ${{ steps.sas.outputs.fslogix_url }}
-      citrix_url: ${{ steps.sas.outputs.citrix_url }}
-
     steps:
 
       - name: Checkout Repository
@@ -41,59 +37,10 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-      - name: Generate Runtime SAS URLs
-        id: sas
-        shell: bash
-        run: |
-
-          EXPIRY=$(date -u -d "+30 minutes" '+%Y-%m-%dT%H:%MZ')
-
-          FSLOGIX_SAS=$(az storage blob generate-sas \
-            --account-name akifsoftware \
-            --container-name software \
-            --name FSLogixAppsSetup.exe \
-            --permissions r \
-            --expiry "$EXPIRY" \
-            --https-only \
-            --auth-mode login \
-            --as-user \
-            -o tsv)
-
-          CITRIX_SAS=$(az storage blob generate-sas \
-            --account-name akifsoftware \
-            --container-name software \
-            --name VDAServerSetup_2603.exe \
-            --permissions r \
-            --expiry "$EXPIRY" \
-            --https-only \
-            --auth-mode login \
-            --as-user \
-            -o tsv)
-          
-          FSLOGIX_URL="https://akifsoftware.blob.core.windows.net/software/FSLogixAppsSetup.exe?$FSLOGIX_SAS"
-          CITRIX_URL="https://akifsoftware.blob.core.windows.net/software/VDAServerSetup_2603.exe?$CITRIX_SAS"
-
-          echo "::add-mask::$FSLOGIX_SAS"
-          echo "::add-mask::$CITRIX_SAS"
-
-          echo "::add-mask::$FSLOGIX_URL"
-          echo "::add-mask::$CITRIX_URL"
-
-          echo "fslogix_url=$FSLOGIX_URL" >> $GITHUB_OUTPUT
-          echo "citrix_url=$CITRIX_URL" >> $GITHUB_OUTPUT
-          
       - name: Packer Init
         run: |
           cd packer
           packer init AK-IF.pkr.hcl
-
-      - name: Verify Generated URLs
-        run: |
-          echo "FSLogix URL generated"
-          echo "${{ steps.sas.outputs.fslogix_url }}" | wc -c
-
-          echo "Citrix URL generated"
-          echo "${{ steps.sas.outputs.citrix_url }}" | wc -c
 
       - name: Packer Validate
         run: |
@@ -102,8 +49,6 @@ jobs:
           packer validate \
             -var "subscription_id=${{ secrets.AZURE_SUBSCRIPTION_ID }}" \
             -var "winrm_password=${{ secrets.WINRM_PASSWORD }}" \
-            -var "fslogix_url=${{ steps.sas.outputs.fslogix_url }}" \
-            -var "citrix_url=${{ steps.sas.outputs.citrix_url }}" \
             AK-IF.pkr.hcl
 
   build:
@@ -134,6 +79,56 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
+      - name: Generate Runtime SAS URLs
+        id: sas
+        shell: bash
+        run: |
+
+          EXPIRY=$(date -u -d "+15 minutes" '+%Y-%m-%dT%H:%MZ')
+
+          FSLOGIX_SAS=$(az storage blob generate-sas \
+            --account-name akifsoftware \
+            --container-name software \
+            --name FSLogixAppsSetup.exe \
+            --permissions r \
+            --expiry "$EXPIRY" \
+            --https-only \
+            --auth-mode login \
+            --as-user \
+            -o tsv)
+
+          CITRIX_SAS=$(az storage blob generate-sas \
+            --account-name akifsoftware \
+            --container-name software \
+            --name VDAServerSetup_2603.exe \
+            --permissions r \
+            --expiry "$EXPIRY" \
+            --https-only \
+            --auth-mode login \
+            --as-user \
+            -o tsv)
+
+          FSLOGIX_URL="https://akifsoftware.blob.core.windows.net/software/FSLogixAppsSetup.exe?$FSLOGIX_SAS"
+
+          CITRIX_URL="https://akifsoftware.blob.core.windows.net/software/VDAServerSetup_2603.exe?$CITRIX_SAS"
+
+          echo "::add-mask::$FSLOGIX_SAS"
+          echo "::add-mask::$CITRIX_SAS"
+
+          echo "::add-mask::$FSLOGIX_URL"
+          echo "::add-mask::$CITRIX_URL"
+
+          echo "fslogix_url=$FSLOGIX_URL" >> "$GITHUB_OUTPUT"
+          echo "citrix_url=$CITRIX_URL" >> "$GITHUB_OUTPUT"
+
+      - name: Verify Generated URLs
+        run: |
+          echo "FSLogix URL generated"
+          echo "${{ steps.sas.outputs.fslogix_url }}" | wc -c
+
+          echo "Citrix URL generated"
+          echo "${{ steps.sas.outputs.citrix_url }}" | wc -c
+
       - name: Packer Build
         run: |
           cd packer
@@ -142,6 +137,6 @@ jobs:
             -var "subscription_id=${{ secrets.AZURE_SUBSCRIPTION_ID }}" \
             -var "image_version=${{ github.event.inputs.image_version }}" \
             -var "winrm_password=${{ secrets.WINRM_PASSWORD }}" \
-            -var "fslogix_url=${{ needs.prepare.outputs.fslogix_url }}" \
-            -var "citrix_url=${{ needs.prepare.outputs.citrix_url }}" \
+            -var "fslogix_url=${{ steps.sas.outputs.fslogix_url }}" \
+            -var "citrix_url=${{ steps.sas.outputs.citrix_url }}" \
             AK-IF.pkr.hcl
