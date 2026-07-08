@@ -75,7 +75,7 @@ variable "image_version" {
 
 variable "build_vm_size" {
   type    = string
-  default = "Standard_D2ads_v5"
+  default = "Standard_D2ads_v6"
 }
 
 # Installer URLs
