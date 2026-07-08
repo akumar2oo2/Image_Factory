@@ -49,6 +49,8 @@ jobs:
           packer validate \
             -var "subscription_id=${{ secrets.AZURE_SUBSCRIPTION_ID }}" \
             -var "winrm_password=${{ secrets.WINRM_PASSWORD }}" \
+            -var "fslogix_url=https://validation.local/fslogix.exe" \
+            -var "citrix_url=https://validation.local/citrix.exe" \
             AK-IF.pkr.hcl
 
   build:
