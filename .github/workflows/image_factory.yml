@@ -69,10 +69,18 @@ jobs:
             --auth-mode login \
             --as-user \
             -o tsv)
+          
+          FSLOGIX_URL="https://akifsoftware.blob.core.windows.net/software/FSLogixAppsSetup.exe?$FSLOGIX_SAS"
+          CITRIX_URL="https://akifsoftware.blob.core.windows.net/software/VDAServerSetup_2603.exe?$CITRIX_SAS"
 
-          echo "fslogix_url=https://akifsoftware.blob.core.windows.net/software/FSLogixAppsSetup.exe?$FSLOGIX_SAS" >> $GITHUB_OUTPUT
+          echo "::add-mask::$FSLOGIX_SAS"
+          echo "::add-mask::$CITRIX_SAS"
 
-          echo "citrix_url=https://akifsoftware.blob.core.windows.net/software/VDAServerSetup_2603.exe?$CITRIX_SAS" >> $GITHUB_OUTPUT
+          echo "::add-mask::$FSLOGIX_URL"
+          echo "::add-mask::$CITRIX_URL"
+
+          echo "fslogix_url=$FSLOGIX_URL" >> $GITHUB_OUTPUT
+          echo "citrix_url=$CITRIX_URL" >> $GITHUB_OUTPUT
 
       - name: Packer Init
         run: |
