@@ -81,11 +81,19 @@ jobs:
 
           echo "fslogix_url=$FSLOGIX_URL" >> $GITHUB_OUTPUT
           echo "citrix_url=$CITRIX_URL" >> $GITHUB_OUTPUT
-
+          
       - name: Packer Init
         run: |
           cd packer
           packer init AK-IF.pkr.hcl
+
+      - name: Verify Generated URLs
+        run: |
+          echo "FSLogix URL generated"
+          echo "${{ steps.sas.outputs.fslogix_url }}" | wc -c
+
+          echo "Citrix URL generated"
+          echo "${{ steps.sas.outputs.citrix_url }}" | wc -c
 
       - name: Packer Validate
         run: |
