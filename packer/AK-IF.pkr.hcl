@@ -119,8 +119,6 @@ source "azure-arm" "windows_server_2022" {
 
   subscription_id = var.subscription_id
 
-  location = var.location
-
   # Temporary Packer build resources
   build_resource_group_name = var.build_resource_group_name
 
