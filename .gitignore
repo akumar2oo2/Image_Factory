@@ -51,3 +51,6 @@ packer_cache/
 
 # Ansible
 *.retry
+
+# Runner key
+*.pem
